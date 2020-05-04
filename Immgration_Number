@@ -1,0 +1,29 @@
+from datetime import datetime, timedelta
+import urllib.request
+import ssl
+
+x = datetime.now() - timedelta(days=1)
+
+def getHtml(url,headers):
+    #page = urllib.request.urlopen(url)
+    req = urllib.request.Request(url=url,headers=headers)
+    page = urllib.request.urlopen(req)
+    html = page.read()
+    html = html.decode('utf-8')
+    return html
+
+# def getImg(html):
+#     reg = r'<p class="img_title">(.*)</p>'
+#     img_title = re.compile(reg)
+#     imglist = re.findall(img_title, html)
+#     return imglist
+
+headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0'}
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
+url = 'https://www.immd.gov.hk/hkt/stat_'+str(x.strftime("%Y%m%d"))+'.html'
+
+html = getHtml(url,headers)
+
+print(html)
