@@ -1,0 +1,67 @@
+from datetime import datetime, timedelta
+from lxml import etree
+import urllib.request
+import numpy as np
+import pandas as pd
+x = datetime.now() - timedelta(days=2)
+
+def getHtml(url):
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0'}
+    req = urllib.request.Request(url=url,headers=headers)
+    page = urllib.request.urlopen(req)
+    html = page.read()
+    html = html.decode('utf-8')
+    return html
+
+
+url = 'https://www.immd.gov.hk/hkt/stat_'+str(x.strftime("%Y%m%d"))+'.html'
+
+html = getHtml(url)
+
+dom = etree.HTML(html)
+
+a_text = dom.xpath('//*[@id="simple_wrapper"]/table/tbody/tr/td/text()')
+
+#print(a_text)
+
+table_header = []
+for num in range(6,14):
+    table_header.append(a_text[num])
+#print(table_header)
+
+table_index = []
+for num in range(14,len(a_text),9):
+    #print(num)
+    table_index.append(a_text[num])
+#print(table_index)
+
+def int2str(s):
+    try:
+        return str(s)
+    except:
+        pass
+
+def not_empty(s):
+    if s == 'None':
+        return False
+    else:
+        return True
+
+def calu(s):
+    try:
+        return int(s)
+    except:
+        try:
+            s = s.split(',')
+            return int(s[0])*1000 + int(s[1])
+        except:
+            pass
+
+int_table_data = list(map(calu,a_text))
+str_table_data = list(map(int2str,int_table_data))
+raw_table_data = list(filter(not_empty,str_table_data))
+data = np.reshape(raw_table_data,[16,8])
+#print(data)
+
+df1 = pd.DataFrame(data,index=table_index,columns=table_header)
+df1.to_csv('Immigration_HK.csv')
